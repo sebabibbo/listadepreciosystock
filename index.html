@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información de Productos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .search-bar, .filters {
+            margin-bottom: 20px;
+        }
+        .filters select {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Información de Productos</h1>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="applyFilters()">
+    </div>
+    <div class="filters">
+        <select id="priceFilter" onchange="applyFilters()">
+            <option value="">Filtrar por precio</option>
+        </select>
+        <select id="scaleFilter" onchange="applyFilters()">
+            <option value="">Filtrar por escala</option>
+        </select>
+    </div>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Escalas</th>
+            </tr>
+        </thead>
+        <tbody id="productTableBody">
+            <!-- Los datos se cargarán aquí -->
+        </tbody>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script>
+        let products = [];
+
+        async function loadProducts() {
+            const sheetId = 'TU_SHEET_ID';  // Reemplaza con el ID de tu Google Sheet
+            const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
+            const query = encodeURIComponent('Select *');
+            const url = `${base}&tq=${query}`;
+
+            const response = await fetch(url);
+            const data = await response.text();
+            const jsonData = JSON.parse(data.substring(47).slice(0, -2));
+
+            const tableBody = document.getElementById('productTableBody');
+            const priceFilter = document.getElementById('priceFilter');
+            const scaleFilter = document.getElementById('scaleFilter');
+
+            jsonData.table.rows.forEach(row => {
+                const product = {
+                    id: row.c[0]?.v || '',
+                    description: row.c[1]?.v || '',
+                    price: row.c[2]?.v || '',
+                    stock: row.c[3]?.v || '',
+                    scale: row.c[4]?.v || ''
+                };
+                products.push(product);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.description}</td>
+                    <td>${product.price}</td>
+                    <td>${product.stock}</td>
+                    <td>${product.scale}</td>
+                `;
+                tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale}`);
+                tableBody.appendChild(tr);
+            });
+
+            populateFilters(priceFilter, 'price');
+            populateFilters(scaleFilter, 'scale');
+        }
+
+        function populateFilters(filterElement, key) {
+            const uniqueValues = [...new Set(products.map(product => product[key]))];
+            uniqueValues.forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                filterElement.appendChild(option);
+            });
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copiado al portapapeles');
+            });
+        }
+
+        function applyFilters() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const priceFilter = document.getElementById('priceFilter').value;
+            const scaleFilter = document.getElementById('scaleFilter').value;
+            const tableBody = document.getElementById('productTableBody');
+            tableBody.innerHTML = '';
+
+            products.forEach(product => {
+                const matchesSearch = product.description.toLowerCase().includes(searchInput);
+                const matchesPrice = priceFilter === '' || product.price === priceFilter;
+                const matchesScale = scaleFilter === '' || product.scale === scaleFilter;
+
+                if (matchesSearch && matchesPrice && matchesScale) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${product.id}</td>
+                        <td>${product.description}</td>
+                        <td>${product.price}</td>
+                        <td>${product.stock}</td>
+                        <td>${product.scale}</td>
+                    `;
+                    tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale}`);
+                    tableBody.appendChild(tr);
+                }
+            });
+        }
+
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>
