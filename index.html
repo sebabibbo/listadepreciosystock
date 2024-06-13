@@ -41,6 +41,9 @@
         <select id="scaleFilter" onchange="applyFilters()">
             <option value="">Filtrar por escala</option>
         </select>
+        <select id="familyFilter" onchange="applyFilters()">
+            <option value="">Filtrar por familia</option>
+        </select>
     </div>
     <table id="productTable">
         <thead>
@@ -50,6 +53,7 @@
                 <th>Precio</th>
                 <th>Stock</th>
                 <th>Escalas</th>
+                <th>Familia</th>
             </tr>
         </thead>
         <tbody id="productTableBody">
@@ -61,7 +65,7 @@
         let products = [];
 
         async function loadProducts() {
-            const sheetId = 'TU_SHEET_ID';  // Reemplaza con el ID de tu Google Sheet
+            const sheetId = '1xKM_NQebvTdQrZ3SLtAzsdlrGKZP3QQliGDMXAs2_Yw';
             const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
             const query = encodeURIComponent('Select *');
             const url = `${base}&tq=${query}`;
@@ -73,6 +77,7 @@
             const tableBody = document.getElementById('productTableBody');
             const priceFilter = document.getElementById('priceFilter');
             const scaleFilter = document.getElementById('scaleFilter');
+            const familyFilter = document.getElementById('familyFilter');
 
             jsonData.table.rows.forEach(row => {
                 const product = {
@@ -80,7 +85,8 @@
                     description: row.c[1]?.v || '',
                     price: row.c[2]?.v || '',
                     stock: row.c[3]?.v || '',
-                    scale: row.c[4]?.v || ''
+                    scale: row.c[4]?.v || '',
+                    family: row.c[5]?.v || ''
                 };
                 products.push(product);
 
@@ -91,13 +97,15 @@
                     <td>${product.price}</td>
                     <td>${product.stock}</td>
                     <td>${product.scale}</td>
+                    <td>${product.family}</td>
                 `;
-                tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale}`);
+                tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale} ${product.family}`);
                 tableBody.appendChild(tr);
             });
 
             populateFilters(priceFilter, 'price');
             populateFilters(scaleFilter, 'scale');
+            populateFilters(familyFilter, 'family');
         }
 
         function populateFilters(filterElement, key) {
@@ -120,6 +128,7 @@
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             const priceFilter = document.getElementById('priceFilter').value;
             const scaleFilter = document.getElementById('scaleFilter').value;
+            const familyFilter = document.getElementById('familyFilter').value;
             const tableBody = document.getElementById('productTableBody');
             tableBody.innerHTML = '';
 
@@ -127,8 +136,9 @@
                 const matchesSearch = product.description.toLowerCase().includes(searchInput);
                 const matchesPrice = priceFilter === '' || product.price === priceFilter;
                 const matchesScale = scaleFilter === '' || product.scale === scaleFilter;
+                const matchesFamily = familyFilter === '' || product.family === familyFilter;
 
-                if (matchesSearch && matchesPrice && matchesScale) {
+                if (matchesSearch && matchesPrice && matchesScale && matchesFamily) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${product.id}</td>
@@ -136,8 +146,9 @@
                         <td>${product.price}</td>
                         <td>${product.stock}</td>
                         <td>${product.scale}</td>
+                        <td>${product.family}</td>
                     `;
-                    tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale}`);
+                    tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale} ${product.family}`);
                     tableBody.appendChild(tr);
                 }
             });
