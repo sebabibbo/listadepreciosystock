@@ -66,7 +66,8 @@
 
         async function loadProducts() {
             const sheetId = '1xKM_NQebvTdQrZ3SLtAzsdlrGKZP3QQliGDMXAs2_Yw';
-            const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
+            const gid = '0';  // Cambia '0' por el GID de la hoja 'CONSOLIDADO'
+            const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${gid}`;
             const query = encodeURIComponent('Select *');
             const url = `${base}&tq=${query}`;
 
