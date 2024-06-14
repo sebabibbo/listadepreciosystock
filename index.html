@@ -65,47 +65,57 @@
         let products = [];
 
         async function loadProducts() {
-            const sheetId = '1xKM_NQebvTdQrZ3SLtAzsdlrGKZP3QQliGDMXAs2_Yw';  // Reemplaza con el ID de tu Google Sheet
+            const sheetId = '1xKM_NQebvTdQrZ3SLtAzsdlrGKZP3QQliGDMXAs2_Yw';
             const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
             const query = encodeURIComponent('Select *');
             const url = `${base}&tq=${query}`;
 
-            const response = await fetch(url);
-            const data = await response.text();
-            const jsonData = JSON.parse(data.substring(47).slice(0, -2));
+            try {
+                const response = await fetch(url);
+                const data = await response.text();
+                const jsonData = JSON.parse(data.substring(47).slice(0, -2));
+                console.log('Datos recibidos:', jsonData);
 
-            const tableBody = document.getElementById('productTableBody');
-            const priceFilter = document.getElementById('priceFilter');
-            const scaleFilter = document.getElementById('scaleFilter');
-            const familyFilter = document.getElementById('familyFilter');
+                const tableBody = document.getElementById('productTableBody');
+                const priceFilter = document.getElementById('priceFilter');
+                const scaleFilter = document.getElementById('scaleFilter');
+                const familyFilter = document.getElementById('familyFilter');
 
-            jsonData.table.rows.forEach(row => {
-                const product = {
-                    id: row.c[0]?.v || '',
-                    description: row.c[1]?.v || '',
-                    price: row.c[2]?.v || '',
-                    stock: row.c[3]?.v || '',
-                    scale: row.c[4]?.v || '',
-                    family: row.c[5]?.v || ''
-                };
-                products.push(product);
+                jsonData.table.rows.forEach((row, index) => {
+                    if (index === 0) {
+                        // Salta la fila de encabezados
+                        return;
+                    }
+                    const product = {
+                        id: row.c[0]?.v || '',
+                        description: row.c[1]?.v || '',
+                        price: row.c[2]?.v || '',
+                        stock: row.c[3]?.v || '',
+                        scale: row.c[4]?.v || '',
+                        family: row.c[5]?.v || ''
+                    };
+                    console.log('Producto:', product);
+                    products.push(product);
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${product.id}</td>
-                    <td>${product.description}</td>
-                    <td>${product.price}</td>
-                    <td>${product.stock}</td>
-                    <td>${product.scale}</td>
-                    <td>${product.family}</td>
-                `;
-                tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale} ${product.family}`);
-                tableBody.appendChild(tr);
-            });
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${product.id}</td>
+                        <td>${product.description}</td>
+                        <td>${product.price}</td>
+                        <td>${product.stock}</td>
+                        <td>${product.scale}</td>
+                        <td>${product.family}</td>
+                    `;
+                    tr.onclick = () => copyToClipboard(`${product.id} ${product.description} ${product.price} ${product.stock} ${product.scale} ${product.family}`);
+                    tableBody.appendChild(tr);
+                });
 
-            populateFilters(priceFilter, 'price');
-            populateFilters(scaleFilter, 'scale');
-            populateFilters(familyFilter, 'family');
+                populateFilters(priceFilter, 'price');
+                populateFilters(scaleFilter, 'scale');
+                populateFilters(familyFilter, 'family');
+            } catch (error) {
+                console.error('Error al cargar los datos:', error);
+            }
         }
 
         function populateFilters(filterElement, key) {
